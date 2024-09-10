@@ -1,14 +1,16 @@
+
 use clap::Parser;
 use anyhow::Result;
 
-
-// rcli csx -i input.csv -0 output.json --header -d ','
+// 导入 Opts、SubCommand 和 process_csv 函数
 use rcli::{Opts, SubCommand, process_csv};
 
 fn main() -> Result<()> {
+    // 解析命令行参数
     let opts: Opts = Opts::parse();
     
-    match opts.cmd{
+    // 根据子命令调用相应的处理函数
+    match opts.cmd {
         SubCommand::Csv(opts) => process_csv(&opts.input, &opts.output),
     }
-    }
+}
