@@ -1,5 +1,6 @@
 use anyhow::Ok;  
 use rand::seq::SliceRandom;
+use zxcvbn::zxcvbn;
 
 const UPPER: &[u8] = b"ABCDEFGHJKLMNPQRSTUVWXYZ";
 const LOWER: &[u8] = b"abcdefghijkmnopqrstuvwxyz";
@@ -42,8 +43,13 @@ pub fn process_genpass(length: u8, upper: bool, lower: bool, number: bool, symbo
 
     password.shuffle(&mut rng);
 
-    // TODO: 确保密码中至少包含一种字符
-    println!("{}", String::from_utf8(password)?);
+    let password = String::from_utf8(password)?;
+    println!("{}", password);
+
+    let estimate = zxcvbn(&password, &[]);
+    eprintln!("Password strenth: {}", estimate.score());
+
+
 
     Ok(())
 }
