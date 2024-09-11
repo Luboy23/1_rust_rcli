@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::path::Path;
+use std::{fmt, path::Path, str::FromStr};
 
 /// 解析命令行参数的结构体
 #[derive(Debug, Parser)]
@@ -16,6 +16,17 @@ pub enum SubCommand {
     /// 处理 CSV 文件的子命令
     #[command(name = "csv", about = "处理 CSV 文件或将 CSV 转换为其他格式")]
     Csv(CsvOpts),
+    #[command(name = "genpass", about = "生成一个随机密码")]
+    GenPass(GenPassOpts)
+
+}
+
+
+
+#[derive(Debug, Clone, Copy)]
+pub enum OutputFormat {
+    Json,
+    Yaml,
 }
 
 /// 处理 CSV 的选项
@@ -26,8 +37,11 @@ pub struct CsvOpts {
     pub input: String,
 
     /// 输出文件路径，短选项 -o，长选项 --output，默认值为 "output.json"
-    #[arg(short, long, default_value = "output.json")]
-    pub output: String,
+    #[arg(short, long)]
+    pub output: Option<String>,
+
+    #[arg( long, value_parser = parse_format, default_value = "json")]
+    pub format: OutputFormat,
 
     /// CSV 文件的分隔符，短选项 -d，长选项 --delimiter，默认值为 ','
     #[arg(short, long, default_value_t = ',')]
@@ -37,6 +51,23 @@ pub struct CsvOpts {
     #[arg(long, default_value_t = true)]
     pub header: bool,
 }
+#[derive(Debug, Parser)]
+pub struct GenPassOpts {
+    #[arg(short, long, default_value_t = 16)]
+    pub length: u8,
+
+    #[arg(long, default_value_t = true)]
+    pub uppercase: bool,
+
+    #[arg(long, default_value_t = true)]
+    pub lowercase: bool,
+
+    #[arg(long, default_value_t = true)]
+    pub number: bool,
+
+    #[arg(long, default_value_t = true)]
+    pub symbol: bool,  
+}
 
 /// 验证输入文件是否存在的函数
 fn verify_input_file(file_name: &str) -> Result<String, String> {
@@ -44,5 +75,36 @@ fn verify_input_file(file_name: &str) -> Result<String, String> {
         Ok(file_name.into())
     } else {
         Err("文件不存在!".into())
+    }
+}
+
+fn parse_format(format: &str) -> Result<OutputFormat, anyhow::Error> {
+    format.parse()
+}
+
+impl From<OutputFormat> for &'static str {
+    fn from(format: OutputFormat) -> Self {
+        match format{
+            OutputFormat::Json => "json",
+            OutputFormat::Yaml => "yaml",
+        }
+    }
+}
+
+impl FromStr for OutputFormat {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s{
+            "json" => Ok(OutputFormat::Json),
+            "yaml" => Ok(OutputFormat::Yaml),
+            v =>anyhow::bail!("Unsupported format: {}", v),
+        }
+    }
+}
+
+impl fmt::Display for OutputFormat {
+    fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Into::<&str>::into(*self))
     }
 }
