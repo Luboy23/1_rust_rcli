@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use anyhow::Result;
 
-use crate::opts::OutputFormat;
+use crate::cli::OutputFormat;
 
 /// 表示 CSV 文件中球员的结构体
 #[derive(Debug, Deserialize, Serialize)]
