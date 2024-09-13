@@ -1,9 +1,11 @@
 
 use clap::Parser;
 use anyhow::{Result};
+use zxcvbn::zxcvbn;
+
 
 // 导入 Opts、SubCommand 和 process_csv 函数
-use rcli::{process_csv, process_decode, process_encode, process_genpass,process_text_sign, Base64SubCommand, Opts, SubCommand, TextSignFormat };
+use rcli::{process_csv, process_decode, process_encode, process_genpass,process_text_sign,process_text_verify, process_generate, Base64SubCommand, Opts, SubCommand, TextSubCommand };
 
 fn main() -> Result<()> {
     // 解析命令行参数
@@ -20,34 +22,44 @@ fn main() -> Result<()> {
             process_csv(&opts.input, output, opts.format)?;
         },
         SubCommand::GenPass(opts) => {
-            process_genpass(opts.length, opts.uppercase, opts.lowercase, opts.number, opts.symbol)?;
+            let password =  process_genpass(opts.length, opts.uppercase, opts.lowercase, opts.number, opts.symbol)?;
+            println!("password: {}", password);
+
+            let estimate = zxcvbn(&password, &[]);
+            eprintln!("Password strength: {}", estimate.score());
+
         },
         SubCommand::Base64(subcmd) => match subcmd {
             Base64SubCommand::Encode(opts) => {
-                process_encode(&opts.input, opts.format)?;
+                let encoded = process_encode(&opts.input, opts.format)?;
+                println!("{}", encoded);
             }
             Base64SubCommand::Decode(opts) => {
-                process_decode(&opts.input, opts.format)?;
+                let decoded = process_decode(&opts.input, opts.format)?;
+                
+                // TODO: decoded data might not be string(but for this example, we assume it is)
+                let decoded = String::from_utf8(decoded)?;
+                println!("{}", decoded);
             }
         },
         SubCommand::Text(subcmd) => match subcmd {
-            rcli::TextSubCommand::Sign(opts) => {
-                match opts.format {
-                    TextSignFormat::Blake3 => {
-                        process_text_sign(&opts.input, &opts.key, opts.format)?;
-                    }
-                    TextSignFormat::Ed25519 => {
-                        println!("Sign with Ed25519");
-                    }
+            TextSubCommand::Sign(opts) => {
+                let sig = process_text_sign(&opts.input, &opts.key, opts.format)?;
+                println!("{}", sig);
 
-                }
             }
-            rcli::TextSubCommand::Verify(opts) => {
-                println!("{:?}", opts);
+            TextSubCommand::Verify(opts) => {
+                let verified =  process_text_verify(&opts.input, &opts.key, opts.format,&opts.sig)?;
+                println!("{:?}", verified);
+
             }
-        }
-    }
-    Ok(())
+            TextSubCommand::Generate(opts) => {
+                let key = process_generate(&opes.format)?;
+                println!("{}", key);
+            }
+    },
+}
+Ok(())
 }
 
 

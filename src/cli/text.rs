@@ -8,6 +8,8 @@ pub enum TextSubCommand {
     Sign(TextSignOpts),
     #[ command(about = "Verify a signed Message")]
     Verify(TextVerifyOpts),
+    #[ command(about = "Generate a new key")]
+    Generate(TextKeyGenerateOpts),
 }
 
 #[derive(Debug, Parser)]
@@ -36,6 +38,12 @@ pub struct TextVerifyOpts {
 
     #[arg(short, long)]
     pub sig:String
+}
+
+#[derive(Debug, Parser)]
+pub struct TextKeyGenerateOpts {
+    #[arg(short, long, default_value = "blake3", value_parser = parse_format)]
+    pub format: TextSignFormat,
 }
 
 #[derive(Debug, Clone, Copy)]
