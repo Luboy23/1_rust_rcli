@@ -2,6 +2,7 @@ mod csv;
 mod genpass;
 mod base64;
 mod text;
+mod http;
 
 use clap::Parser;
 use std::path::PathBuf;
@@ -11,7 +12,8 @@ use std::path::Path;
 pub use self::{
     base64::{Base64Format, Base64SubCommand},
     csv::OutputFormat,
-    text::{TextSignFormat,TextSubCommand}
+    text::{TextSignFormat,TextSubCommand},
+    http::HttpSubCommand,
 };
 
 /// 解析命令行参数的结构体
@@ -37,6 +39,9 @@ pub enum SubCommand {
 
     #[command(subcommand)]
     Text(TextSubCommand),
+
+    #[command(subcommand)]
+    Http(HttpSubCommand),
 }
 
 /// 验证输入文件是否存在的函数

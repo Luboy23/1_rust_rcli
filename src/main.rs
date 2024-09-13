@@ -2,14 +2,17 @@
 use std::fs;
 
 use clap::Parser;
-use anyhow::{Result};
+use anyhow::Result;
 use zxcvbn::zxcvbn;
 
 
 // 导入 Opts、SubCommand 和 process_csv 函数
-use rcli::{process_csv, process_decode, process_encode, process_generate, process_genpass, process_text_sign, process_text_verify, Base64SubCommand, Opts, SubCommand, TextSignFormat, TextSubCommand };
+use rcli::{process_csv, process_decode, process_encode, process_generate, process_genpass, process_text_sign, process_text_verify, process_http_serve,
+            Base64SubCommand, HttpSubCommand, Opts, SubCommand, TextSignFormat, TextSubCommand };
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
+    tracing_subscriber::fmt::init();
     // 解析命令行参数
     let opts: Opts = Opts::parse();
     
@@ -69,7 +72,12 @@ fn main() -> Result<()> {
                     }
                 }
             }
-    },
+         },
+         SubCommand::Http(subcmd) => match subcmd {
+            HttpSubCommand::Serve(opts) => {
+                process_http_serve(opts.dir, opts.port).await?;
+            }
+         }
 }
 Ok(())
 }
