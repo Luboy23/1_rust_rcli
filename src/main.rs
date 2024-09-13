@@ -1,11 +1,13 @@
 
+use std::fs;
+
 use clap::Parser;
 use anyhow::{Result};
 use zxcvbn::zxcvbn;
 
 
 // 导入 Opts、SubCommand 和 process_csv 函数
-use rcli::{process_csv, process_decode, process_encode, process_genpass,process_text_sign,process_text_verify, process_generate, Base64SubCommand, Opts, SubCommand, TextSubCommand };
+use rcli::{process_csv, process_decode, process_encode, process_generate, process_genpass, process_text_sign, process_text_verify, Base64SubCommand, Opts, SubCommand, TextSignFormat, TextSubCommand };
 
 fn main() -> Result<()> {
     // 解析命令行参数
@@ -54,8 +56,18 @@ fn main() -> Result<()> {
 
             }
             TextSubCommand::Generate(opts) => {
-                let key = process_generate(&opes.format)?;
-                println!("{}", key);
+                let key = process_generate(opts.format)?;
+                match opts.format {
+                    TextSignFormat::Blake3 => {
+                        let name = opts.output.join("blake3.txt");
+                        fs::write(name, &key[0])?;
+                    }
+                    TextSignFormat::Ed25519 => {
+                        let name = &opts.output;
+                        fs::write(name.join("ed25519.sk"), &key[0])?;
+                        fs::write(name.join("ed25519.pk"), &key[1])?;
+                    }
+                }
             }
     },
 }

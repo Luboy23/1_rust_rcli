@@ -1,4 +1,4 @@
-use anyhow::{Ok, Result};
+use anyhow::Result;
 use ed25519_dalek::{Signature, Signer, SigningKey,Verifier, VerifyingKey};
 use rand::rngs::OsRng;
 use std::{io::Read, path::Path};
@@ -6,7 +6,7 @@ use std::fs;
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use crate::{get_reader, TextSignFormat};
 
-use super::{gen_pass, process_genpass};
+use super::process_genpass;
 
 pub trait TextSign {
     // sign the data from the reader and return signature
@@ -65,14 +65,14 @@ pub fn process_text_verify(input: &str, key: &str, format:TextSignFormat, sig:&s
         let verified = match format {
             TextSignFormat::Blake3 => {
                 let verifier = Blake3::load(key)?;
-                verifier.verify(&mut reader, &sig)
+                verifier.verify(&mut reader, &sig)?
             }
             TextSignFormat::Ed25519 => {
                 let verifier: Ed25519Verifier = Ed25519Verifier::load(key)?;
-                verifier.verify(&mut reader, &sig)
+                verifier.verify(&mut reader, &sig)?
             }
         };
-        Ok(verified);
+        Ok(verified)
         }
 
 pub fn process_generate(format: TextSignFormat) -> Result<Vec<Vec<u8>>> {
@@ -202,8 +202,10 @@ impl Ed25519Verifier {
     }
 }
 
-#[cfg(test)]
+#[cfg(test)]  
 mod test {
+    use anyhow::Ok;
+
     use super::*;
 
     #[test]
@@ -221,4 +223,15 @@ mod test {
         
         Ok(())
     }
+    #[test]
+    fn test_ed25519_sign_verify() -> Result<()> {
+        let sk = Ed25519Signer::load("fixtures/ed25519.sk")?;
+        let pk = Ed25519Verifier::load("fixtures/ed25519.pk")?;
+
+
+        let data = b"hello world";
+        let sig = sk.sign( &mut &data[..])?;
+        assert!(pk.verify(&data[..], &sig)?);
+        Ok(())
+    } 
 }

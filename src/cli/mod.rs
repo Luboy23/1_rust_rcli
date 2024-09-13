@@ -4,6 +4,7 @@ mod base64;
 mod text;
 
 use clap::Parser;
+use std::path::PathBuf;
 
 pub use self::{csv::CsvOpts, genpass::GenPassOpts};
 use std::path::Path;
@@ -45,6 +46,14 @@ fn verify_file(file_name: &str) -> Result<String, &'static str> {
     } else {
         Err("文件不存在!".into())
     } 
+}
+fn verify_path(path: &str) -> Result<PathBuf, &'static str> {
+    let p = Path::new(path);
+    if p.exists() && p.is_dir() {
+        Ok(path.into())
+    } else {
+        Err("Path does not exist or is not a directory")
+    }
 }
 
 #[cfg(test)]
