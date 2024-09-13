@@ -1,3 +1,8 @@
-### Test index page
+### Test index static file
 
 GET http://localhost:8080/Cargo.lock
+
+### Test index static file with woer-http
+
+GET http://localhost:8080/tower/Cargo.lock
+
